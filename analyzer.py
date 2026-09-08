@@ -1,6 +1,9 @@
 from collections import Counter
+import csv
+import os
 
 LOG_FILE = "sample_logs/auth.log"
+REPORT_FILE = "reports/security_report.csv"
 
 
 def load_logs(filename):
@@ -24,19 +27,15 @@ def load_logs(filename):
 
 
 def analyze_logs(logs):
-    failed_logins = [
+    failed = [
         log for log in logs
         if log["event"] == "LOGIN_FAILED"
     ]
 
-    ip_counts = Counter(
-        log["ip"] for log in failed_logins
-    )
-
+    ip_counts = Counter(log["ip"] for log in failed)
     alerts = []
 
     for ip, count in ip_counts.items():
-
         if count >= 5:
             severity = "HIGH"
         elif count >= 3:
@@ -50,7 +49,23 @@ def analyze_logs(logs):
             "severity": severity
         })
 
-    return failed_logins, alerts
+    return alerts
+
+
+def save_report(alerts):
+    os.makedirs("reports", exist_ok=True)
+
+    with open(REPORT_FILE, "w", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerow(["IP", "Failed Attempts", "Severity"])
+
+        for alert in alerts:
+            writer.writerow([
+                alert["ip"],
+                alert["attempts"],
+                alert["severity"]
+            ])
 
 
 def main():
@@ -59,12 +74,9 @@ def main():
     print("=" * 50)
 
     logs = load_logs(LOG_FILE)
+    alerts = analyze_logs(logs)
 
-    failed_logins, alerts = analyze_logs(logs)
-
-    print(f"\nTotal Events  : {len(logs)}")
-    print(f"Failed Logins : {len(failed_logins)}")
-
+    print(f"\nTotal Events : {len(logs)}")
     print("\nSecurity Alerts")
     print("-" * 50)
 
@@ -75,7 +87,9 @@ def main():
             f"Severity: {alert['severity']}"
         )
 
-    print("\nAnalysis completed successfully.")
+    save_report(alerts)
+
+    print("\nSecurity report generated successfully.")
 
 
 if __name__ == "__main__":
