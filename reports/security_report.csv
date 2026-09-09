@@ -1,3 +1,2 @@
 IP,Failed Attempts,Severity
-192.0.2.10,4,HIGH
-192.0.2.20,0,LOW
+192.0.2.10,4,MEDIUM
