@@ -6,22 +6,49 @@ LOG_FILE = "sample_logs/auth.log"
 REPORT_FILE = "reports/security_report.csv"
 
 
+def parse_log_line(line):
+    parts = line.strip().split()
+
+    if len(parts) < 5:
+        return None
+
+    try:
+        timestamp = parts[0] + " " + parts[1]
+        event = parts[2]
+
+        fields = {}
+        for part in parts[3:]:
+            if "=" in part:
+                key, value = part.split("=", 1)
+                fields[key] = value
+
+        if "user" not in fields or "ip" not in fields:
+            return None
+
+        return {
+            "timestamp": timestamp,
+            "event": event,
+            "user": fields["user"],
+            "ip": fields["ip"]
+        }
+
+    except Exception:
+        return None
+
+
 def load_logs(filename):
     logs = []
 
-    with open(filename, "r") as file:
-        for line in file:
-            parts = line.strip().split()
+    try:
+        with open(filename, "r") as file:
+            for line in file:
+                log = parse_log_line(line)
 
-            if len(parts) < 5:
-                continue
+                if log is not None:
+                    logs.append(log)
 
-            logs.append({
-                "timestamp": parts[0] + " " + parts[1],
-                "event": parts[2],
-                "user": parts[3].split("=")[1],
-                "ip": parts[4].split("=")[1]
-            })
+    except FileNotFoundError:
+        print(f"Error: Log file not found: {filename}")
 
     return logs
 
@@ -94,3 +121,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
