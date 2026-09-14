@@ -53,7 +53,7 @@ def load_logs(filename):
     return logs
 
 
-def analyze_logs(logs):
+def detect_failed_login_rule(logs):
     failed = [
         log for log in logs
         if log["event"] == "LOGIN_FAILED"
@@ -71,10 +71,19 @@ def analyze_logs(logs):
             severity = "LOW"
 
         alerts.append({
+            "rule": "Repeated Failed Login",
             "ip": ip,
             "attempts": count,
             "severity": severity
         })
+
+    return alerts
+
+
+def analyze_logs(logs):
+    alerts = []
+
+    alerts.extend(detect_failed_login_rule(logs))
 
     return alerts
 
