@@ -74,8 +74,34 @@ def detect_failed_login_rule(logs):
             "rule": "Repeated Failed Login",
             "ip": ip,
             "attempts": count,
-            "severity": severity
+            "severity": severity,
+            "reason": "Repeated failed login attempts detected"
         })
+
+    return alerts
+
+
+def detect_success_after_failures_rule(logs):
+    alerts = []
+    failed_by_ip = Counter()
+
+    for log in logs:
+        ip = log["ip"]
+
+        if log["event"] == "LOGIN_FAILED":
+            failed_by_ip[ip] += 1
+
+        elif log["event"] == "LOGIN_SUCCESS":
+            if failed_by_ip[ip] >= 3:
+                alerts.append({
+                    "rule": "Successful Login After Failures",
+                    "ip": ip,
+                    "attempts": failed_by_ip[ip],
+                    "severity": "HIGH",
+                    "reason": "Successful login detected after multiple failed attempts"
+                })
+
+            failed_by_ip[ip] = 0
 
     return alerts
 
@@ -84,6 +110,7 @@ def analyze_logs(logs):
     alerts = []
 
     alerts.extend(detect_failed_login_rule(logs))
+    alerts.extend(detect_success_after_failures_rule(logs))
 
     return alerts
 
@@ -108,7 +135,7 @@ def save_report(alerts):
                 alert["ip"],
                 alert["attempts"],
                 alert["severity"],
-                "Repeated failed login attempts detected"
+                alert["reason"]
             ])
 
 
@@ -126,9 +153,11 @@ def main():
 
     for alert in alerts:
         print(
+            f"Rule: {alert['rule']} | "
             f"IP: {alert['ip']} | "
             f"Attempts: {alert['attempts']} | "
-            f"Severity: {alert['severity']}"
+            f"Severity: {alert['severity']}\n"
+            f"Reason: {alert['reason']}"
         )
 
     save_report(alerts)
