@@ -1,2 +1,2 @@
-IP,Failed Attempts,Severity
-192.0.2.10,4,MEDIUM
+Rule,IP,Failed Attempts,Severity,Reason
+Repeated Failed Login,192.0.2.10,4,MEDIUM,Repeated failed login attempts detected

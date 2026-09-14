@@ -94,13 +94,21 @@ def save_report(alerts):
     with open(REPORT_FILE, "w", newline="") as file:
         writer = csv.writer(file)
 
-        writer.writerow(["IP", "Failed Attempts", "Severity"])
+        writer.writerow([
+            "Rule",
+            "IP",
+            "Failed Attempts",
+            "Severity",
+            "Reason"
+        ])
 
         for alert in alerts:
             writer.writerow([
+                alert["rule"],
                 alert["ip"],
                 alert["attempts"],
-                alert["severity"]
+                alert["severity"],
+                "Repeated failed login attempts detected"
             ])
 
 
